@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The friend who ignores me</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b141a;color:#e9edef;font-family:Arial,sans-serif}
+.app{height:100dvh;max-width:650px;margin:auto;display:flex;flex-direction:column;background:#0b141a}
+header{background:#202c33;display:flex;align-items:center;gap:10px;padding:12px 14px}
+.avatar{width:43px;height:43px;border-radius:50%;background:#52636c;display:grid;place-items:center;font-size:25px}
+.person{flex:1;min-width:0}
+.person b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person small{color:#aebac1;font-size:12px}
+button{border:0;cursor:pointer}
+.call{background:transparent;color:#aebac1;font-size:22px;padding:7px}
+#chat{flex:1;overflow-y:auto;padding:18px 12px;display:flex;flex-direction:column;gap:10px;background-color:#0b141a;background-image:radial-gradient(#ffffff09 1px,transparent 1px);background-size:24px 24px}
+.notice{text-align:center;align-self:center;background:#18252d;color:#9daeb8;border-radius:8px;padding:9px;font-size:11px;margin-bottom:12px}
+.bubble{max-width:83%;padding:9px 11px 5px;border-radius:11px;animation:pop .2s ease;overflow-wrap:anywhere}
+.me{background:#005c4b;align-self:flex-end;border-top-right-radius:2px}
+.them{background:#202c33;align-self:flex-start;border-top-left-radius:2px}
+.msg{font-size:15px;line-height:1.45;white-space:pre-wrap}
+.meta{text-align:right;color:#aebac1;font-size:10px;margin-top:4px}
+.me .meta{color:#9cd3c4}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+#typing{font-size:12px;color:#9daeb8;padding:0 16px 7px;display:none}
+footer{background:#202c33;padding:9px;display:flex;align-items:center;gap:8px}
+#message{flex:1;min-width:0;border:0;outline:0;border-radius:25px;padding:13px;background:#2a3942;color:white;font-size:15px}
+#emojiBtn{background:transparent;color:#e9edef;font-size:25px}
+#send{background:#00a884;color:white;border-radius:50%;height:43px;width:43px;font-size:20px}
+#emojis{display:none;background:#202c33;padding:12px;grid-template-columns:repeat(8,1fr);gap:8px}
+#emojis button{background:transparent;font-size:23px;padding:5px}
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#34434b;padding:12px 18px;border-radius:12px;font-size:13px;z-index:5;text-align:center;max-width:85%}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<div class="avatar">🗿</div>
+<div class="person">
+<b>The friend who ignores me</b>
+<small id="status">last seen forever</small>
+</div>
+<button class="call" onclick="rejectCall()">📹</button>
+<button class="call" onclick="rejectCall()">📞</button>
+</header>
+<main id="chat">
+<div class="notice">🔒 Messages are protected by absolutely no friendship.</div>
+</main>
+<div id="typing">typing...</div>
+<div id="emojis"></div>
+<footer>
+<button id="emojiBtn" onclick="toggleEmojis()">☺</button>
+<input id="message" placeholder="Message..." autocomplete="off">
+<button id="send" onclick="sendMessage()">➤</button>
+</footer>
+</div>
+<script>
+const chat=document.getElementById("chat");
+const input=document.getElementById("message");
+const typing=document.getElementById("typing");
+const statusText=document.getElementById("status");
+const emojiBox=document.getElementById("emojis");
+let count=0;
+let queue=Promise.resolve();
+
+const emojiList=["😂","💀","👎","🙄","🗿","😭","🤡","😒","😴","🤨","🔥","🤦","😐","🤷","💤","👍"];
+emojiList.forEach(e=>{
+const b=document.createElement("button");
+b.textContent=e;
+b.onclick=()=>{input.value+=e;input.focus()};
+emojiBox.appendChild(b);
+});
+
+function toggleEmojis(){
+emojiBox.style.display=emojiBox.style.display==="grid"?"none":"grid";
+}
+
+function addMessage(text,mine){
+const b=document.createElement("div");
+b.className="bubble "+(mine?"me":"them");
+const m=document.createElement("div");
+m.className="msg";
+m.textContent=text;
+const t=document.createElement("div");
+t.className="meta";
+t.textContent=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+(mine?" ✓✓":"");
+b.append(m,t);
+chat.appendChild(b);
+chat.scrollTop=chat.scrollHeight;
+return t;
+}
+
+function chooseReply(s){
+s=s.toLowerCase();
+if(/hello|^hi$|^hey$|hii/.test(s))return "?";
+if(/good morning|good night/.test(s))return "Ok";
+if(/love you|miss you/.test(s))return "👎";
+if(/busy|free|available/.test(s))return "DND 💤";
+if(/why|ignore|reply/.test(s))return "And?";
+if(/shut up/.test(s))return "You first 🙄";
+if(/sorry/.test(s))return "Ok";
+if(/please|help/.test(s))return "No 🗿";
+if(/friend|bestie/.test(s))return "Who?";
+if(/call|phone|video/.test(s))return "Don't.";
+if(/thank/.test(s))return "👍";
+if(/😂|💀|😭/.test(s))return "👎";
+const replies=["DND","👎","Shut up 🙄","And?","No","Ok","Who asked? 💀","K","Not reading that","👍👎"];
+return replies[Math.floor(Math.random()*replies.length)];
+}
+
+function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+
+async function respond(text,receipt){
+await wait(500+Math.random()*900);
+receipt.textContent=receipt.textContent.replace("✓✓","✓✓");
+receipt.style.color="#53bdeb";
+if(count%5===0){
+await wait(2000);
+addMessage("DND",false);
+return;
+}
+typing.style.display="block";
+statusText.textContent="typing...";
+await wait(900+Math.random()*1600);
+typing.style.display="none";
+statusText.textContent="last seen forever";
+addMessage(chooseReply(text),false);
+}
+
+function sendMessage(){
+const text=input.value.trim();
+if(!text)return;
+input.value="";
+emojiBox.style.display="none";
+count++;
+const receipt=addMessage(text,true);
+queue=queue.then(()=>respond(text,receipt));
+}
+
+input.addEventListener("keydown",e=>{
+if(e.key==="Enter"){e.preventDefault();sendMessage()}
+});
+
+function toast(text){
+const el=document.createElement("div");
+el.className="toast";
+el.textContent=text;
+document.body.appendChild(el);
+setTimeout(()=>el.remove(),2400);
+}
+
+function rejectCall(){
+toast("Call declined. Obviously. 👎");
+}
+
+setTimeout(()=>addMessage("DND",false),1200);
+</script>
+</body>
+</html>
