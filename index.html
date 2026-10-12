@@ -67,6 +67,7 @@ let count=0;
 let queue=Promise.resolve();
 
 const emojiList=["😂","💀","👎","🙄","🗿","😭","🤡","😒","😴","🤨","🔥","🤦","😐","🤷","💤","👍"];
+
 emojiList.forEach(e=>{
 const b=document.createElement("button");
 b.textContent=e;
@@ -93,41 +94,37 @@ chat.scrollTop=chat.scrollHeight;
 return t;
 }
 
-function chooseReply(s){
-s=s.toLowerCase();
-if(/hello|^hi$|^hey$|hii/.test(s))return "?";
-if(/good morning|good night/.test(s))return "Ok";
-if(/love you|miss you/.test(s))return "👎";
-if(/busy|free|available/.test(s))return "DND 💤";
-if(/why|ignore|reply/.test(s))return "And?";
-if(/shut up/.test(s))return "You first 🙄";
-if(/sorry/.test(s))return "Ok";
-if(/please|help/.test(s))return "No 🗿";
-if(/friend|bestie/.test(s))return "Who?";
-if(/call|phone|video/.test(s))return "Don't.";
-if(/thank/.test(s))return "👍";
-if(/😂|💀|😭/.test(s))return "👎";
-const replies=["DND","👎","Shut up 🙄","And?","No","Ok","Who asked? 💀","K","Not reading that","👍👎"];
+// ONLY THREE REPLIES
+function chooseReply(){
+const replies=[
+"DND 💤",
+"👎",
+"Shut up 🙄"
+];
 return replies[Math.floor(Math.random()*replies.length)];
 }
 
-function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+function wait(ms){
+return new Promise(r=>setTimeout(r,ms));
+}
 
-async function respond(text,receipt){
+async function respond(receipt){
 await wait(500+Math.random()*900);
-receipt.textContent=receipt.textContent.replace("✓✓","✓✓");
 receipt.style.color="#53bdeb";
+
+// Sometimes takes longer to reply
 if(count%5===0){
 await wait(2000);
-addMessage("DND",false);
+addMessage(chooseReply(),false);
 return;
 }
+
 typing.style.display="block";
 statusText.textContent="typing...";
 await wait(900+Math.random()*1600);
 typing.style.display="none";
 statusText.textContent="last seen forever";
-addMessage(chooseReply(text),false);
+addMessage(chooseReply(),false);
 }
 
 function sendMessage(){
@@ -137,11 +134,14 @@ input.value="";
 emojiBox.style.display="none";
 count++;
 const receipt=addMessage(text,true);
-queue=queue.then(()=>respond(text,receipt));
+queue=queue.then(()=>respond(receipt));
 }
 
 input.addEventListener("keydown",e=>{
-if(e.key==="Enter"){e.preventDefault();sendMessage()}
+if(e.key==="Enter"){
+e.preventDefault();
+sendMessage();
+}
 });
 
 function toast(text){
@@ -153,10 +153,10 @@ setTimeout(()=>el.remove(),2400);
 }
 
 function rejectCall(){
-toast("Call declined. Obviously. 👎");
+toast("Call declined. 👎");
 }
 
-setTimeout(()=>addMessage("DND",false),1200);
+setTimeout(()=>addMessage("DND 💤",false),1200);
 </script>
 </body>
 </html>
